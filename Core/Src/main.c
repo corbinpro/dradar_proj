@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <stdio.h>
+#include "cc2500.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -57,6 +57,8 @@ ADC_HandleTypeDef hadc1;
 
 I2C_HandleTypeDef hi2c1;
 
+SPI_HandleTypeDef hspi1;
+
 /* USER CODE BEGIN PV */
 char logMessage[100];
 /* USER CODE END PV */
@@ -66,6 +68,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 void CharLCD_Write_Nibble (uint8_t nibble, uint8_t dc);
 void CharLCD_Send_Cmd(uint8_t cmd);
@@ -112,19 +115,24 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   MX_I2C1_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
-  // Start the ADC
-  HAL_ADC_Start(&hadc1);
-  // Wait for the analog-to-digital conversion to complete
-  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 
 
   CharLCD_Init(); // Initialize the LCD
-   CharLCD_Set_Cursor(0,0); // Set cursor to row 0, column 0
-   CharLCD_Write_String("5.8GHZ:    2.4GHZ: ");
-   CharLCD_Set_Cursor(1,0); // Set cursor to row 1, column 0
-   CharLCD_Write_String("0.0V       NO_SIGNAL");
+  CharLCD_Set_Cursor(0,0); // Set cursor to row 0, column 0
+  CharLCD_Write_String("INITIALIZING...");
+  CharLCD_Set_Cursor(1,0); // Set cursor to row 1, column 0
+  CharLCD_Write_String("CALIBRATING...");
+
+  //initialize the cc2500 chip
+  CC2500_Init();
+
+  //set timing for initial calibration
+  uint32_t lastCalibration = HAL_GetTick(); // ms
+  //set calibration interval
+  const uint32_t calibrationInterval = 3 * 60 * 1000; // 3 minutes
 
 
   /* USER CODE END 2 */
@@ -133,25 +141,30 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  //Detect with log detector
+	  // Start the ADC
+	  HAL_ADC_Start(&hadc1);
+	  // Wait for the analog-to-digital conversion to complete
+	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 
 	  // Read ADC value
 	  uint16_t logInputValue = HAL_ADC_GetValue(&hadc1);
+	  float voltage = (logInputValue / 4095.0) * 3.3f;  // convert to volts
 	  //checl input val
+	  // TODO change to use noise floor. take code from cc2500 driver
 	  if (logInputValue >= 0.3){
 		  //create display message
-		  sprintf(logmessage, "V:%u       NO_SIGNAL", logInputValue);
+		  sprintf(logMessage, "V%.2f", voltage);
 		  CharLCD_Set_Cursor(1,0); // Set cursor to row 1, column 0
-		  CharLCD_Write_String(logmessage);
+		  CharLCD_Write_String(logMessage);
+
+		  //ADD trigger alarm
 	  }
-	  // Delay 250 ms
-	  HAL_Delay(500);
 
-	  //read serial input
+	  //Sweep and detect with cc2500 chip
+	  CC2500_SweepAndDetect();
+	  HAL_Delay(500); //TODO rough estimate for sweeping both in about 1 second
 
-	  //create message
-	  //send message to screen
-
-	  HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -324,6 +337,46 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 7;
+  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -342,21 +395,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(CHIP_SELECT_GPIO_Port, CHIP_SELECT_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : CHIP_SELECT_Pin */
-  GPIO_InitStruct.Pin = CHIP_SELECT_Pin;
+  /*Configure GPIO pin : PA4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(CHIP_SELECT_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : CLK_Pin PA6 PA7 */
-  GPIO_InitStruct.Pin = CLK_Pin|GPIO_PIN_6|GPIO_PIN_7;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */

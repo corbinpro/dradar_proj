@@ -1,0 +1,9 @@
+../Core/Src/cc2500.c:12:6:CC2500_WriteRegister	1
+../Core/Src/cc2500.c:20:9:CC2500_ReadRegister	1
+../Core/Src/cc2500.c:31:6:CC2500_Strobe	1
+../Core/Src/cc2500.c:38:6:CC2500_SetChannel	1
+../Core/Src/cc2500.c:44:9:CC2500_ReadRSSI	2
+../Core/Src/cc2500.c:78:6:CC2500_ApplyConfig	1
+../Core/Src/cc2500.c:107:6:CC2500_Init	1
+../Core/Src/cc2500.c:124:6:CC2500_RecalibrateNoiseFloor	2
+../Core/Src/cc2500.c:147:6:CC2500_SweepAndDetect	3

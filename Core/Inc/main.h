@@ -59,16 +59,6 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define LOG_IN_Pin GPIO_PIN_0
 #define LOG_IN_GPIO_Port GPIOA
-#define CHIP_SELECT_Pin GPIO_PIN_4
-#define CHIP_SELECT_GPIO_Port GPIOA
-#define CLK_Pin GPIO_PIN_5
-#define CLK_GPIO_Port GPIOA
-#define TMS_Pin GPIO_PIN_13
-#define TMS_GPIO_Port GPIOA
-#define TCK_Pin GPIO_PIN_14
-#define TCK_GPIO_Port GPIOA
-#define SWO_Pin GPIO_PIN_3
-#define SWO_GPIO_Port GPIOB
 #define SCL_D15_Pin GPIO_PIN_8
 #define SCL_D15_GPIO_Port GPIOB
 #define SDA_D14_Pin GPIO_PIN_9

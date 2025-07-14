@@ -1,0 +1,14 @@
+../Core/Src/main.c:91:5:main	2
+../Core/Src/main.c:179:6:SystemClock_Config	4
+../Core/Src/main.c:229:13:MX_ADC1_Init	4
+../Core/Src/main.c:296:13:MX_I2C1_Init	4
+../Core/Src/main.c:344:13:MX_SPI1_Init	2
+../Core/Src/main.c:384:13:MX_GPIO_Init	1
+../Core/Src/main.c:419:6:CharLCD_Write_Nibble	1
+../Core/Src/main.c:435:6:CharLCD_Send_Cmd	3
+../Core/Src/main.c:450:6:CharLCD_Send_Data	1
+../Core/Src/main.c:462:6:CharLCD_Init	1
+../Core/Src/main.c:483:6:CharLCD_Write_String	2
+../Core/Src/main.c:495:6:CharLCD_Set_Cursor	3
+../Core/Src/main.c:514:6:CharLCD_Clear	1
+../Core/Src/main.c:524:6:Error_Handler	1
