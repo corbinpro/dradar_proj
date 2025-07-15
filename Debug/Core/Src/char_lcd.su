@@ -1,0 +1,8 @@
+../Core/Src/char_lcd.c:20:6:CharLCD_Write_Nibble	32	static
+../Core/Src/char_lcd.c:36:6:CharLCD_Send_Cmd	24	static
+../Core/Src/char_lcd.c:51:6:CharLCD_Send_Data	24	static
+../Core/Src/char_lcd.c:63:6:CharLCD_Init	8	static
+../Core/Src/char_lcd.c:84:6:CharLCD_Write_String	16	static
+../Core/Src/char_lcd.c:96:6:CharLCD_Set_Cursor	24	static
+../Core/Src/char_lcd.c:115:6:CharLCD_Clear	8	static
+../Core/Src/char_lcd.c:121:6:RecieveHandles	16	static

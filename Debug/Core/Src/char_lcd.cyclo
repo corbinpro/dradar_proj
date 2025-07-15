@@ -1,0 +1,8 @@
+../Core/Src/char_lcd.c:20:6:CharLCD_Write_Nibble	1
+../Core/Src/char_lcd.c:36:6:CharLCD_Send_Cmd	3
+../Core/Src/char_lcd.c:51:6:CharLCD_Send_Data	1
+../Core/Src/char_lcd.c:63:6:CharLCD_Init	1
+../Core/Src/char_lcd.c:84:6:CharLCD_Write_String	2
+../Core/Src/char_lcd.c:96:6:CharLCD_Set_Cursor	3
+../Core/Src/char_lcd.c:115:6:CharLCD_Clear	1
+../Core/Src/char_lcd.c:121:6:RecieveHandles	1

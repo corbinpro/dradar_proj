@@ -2,6 +2,7 @@
 #define CC2500_H
 
 #include "stm32l4xx_hal.h"
+#include "stm32l4xx_hal_conf.h"
 
 // SPI & GPIO control
 #define CC2500_CS_PORT GPIOA

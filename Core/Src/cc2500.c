@@ -1,10 +1,14 @@
 #include "cc2500.h"
 #include "main.h"
 #include <stdio.h>
+#include "stm32l4xx_hal_conf.h"
+#include "char_lcd.h"
 
 // Exposed values
 int8_t CC2500_NoiseFloor = -100;
 int8_t CC2500_DetectionThreshold = -80;
+char rssiString[16];
+
 
 extern SPI_HandleTypeDef hspi1;
 
@@ -158,8 +162,9 @@ void CC2500_SweepAndDetect(void) {
         	//TODO ADD Trigger alarm
         }
         else {
+        	sprintf(rssiString, "RSSI:%d", rssi);
         	CharLCD_Set_Cursor(1,7); // Set cursor to row 1, column 0
-        	CharLCD_Write_String("________");
+        	CharLCD_Write_String(rssiString);
 
         	//TODO ADD turn off alarm
         }
