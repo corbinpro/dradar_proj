@@ -30,8 +30,10 @@ Core/Src/cc2500.o: ../Core/Src/cc2500.c ../Core/Inc/cc2500.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_spi.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_spi_ex.h \
+ ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim.h \
+ ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h \
  ../Core/Inc/stm32l4xx_hal_conf.h ../Core/Inc/main.h \
- ../Core/Inc/char_lcd.h ../Core/Inc/main.h
+ ../Core/Inc/char_lcd.h ../Core/Inc/main.h ../Core/Inc/buzzer.h
 ../Core/Inc/cc2500.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 ../Core/Inc/stm32l4xx_hal_conf.h:
@@ -64,7 +66,10 @@ Core/Src/cc2500.o: ../Core/Src/cc2500.c ../Core/Inc/cc2500.h \
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_spi.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_spi_ex.h:
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim.h:
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h:
 ../Core/Inc/stm32l4xx_hal_conf.h:
 ../Core/Inc/main.h:
 ../Core/Inc/char_lcd.h:
 ../Core/Inc/main.h:
+../Core/Inc/buzzer.h:

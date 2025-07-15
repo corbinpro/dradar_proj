@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "stm32l4xx_hal_conf.h"
 #include "char_lcd.h"
+#include "buzzer.h"
 
 // Exposed values
 int8_t CC2500_NoiseFloor = -100;
@@ -150,9 +151,9 @@ void CC2500_RecalibrateNoiseFloor(void) {
 // Use sweep mode and read rssi to see if packets are being recieved on any channels, read strength, alert on noise floor threshold
 void CC2500_SweepAndDetect(void) {
     for (uint8_t ch = 0; ch <= 100; ch++) {
-        CC2500_SetChannel(ch);
+        CC2500_SetChannel(ch); //set channel
         HAL_Delay(3);
-        int8_t rssi = CC2500_ReadRSSI();
+        int8_t rssi = CC2500_ReadRSSI(); //read signal strength on channel
 
 
         //OUTPUT ON DETECTION
@@ -163,9 +164,11 @@ void CC2500_SweepAndDetect(void) {
         	CharLCD_Set_Cursor(1,7); // Set cursor to row 1, column 0
         	CharLCD_Write_String("DT!");
         	HAL_Delay(3);
-        	//TODO ADD Trigger alarm
+        	//Trigger alarm
+        	Buzzer_On(523); // Tone 2: C5
+        	//scan again
         	CC2500_SetChannel(ch);
-        	HAL_Delay(3);
+        	HAL_Delay(200);
         	rssi = CC2500_ReadRSSI();
         	if (rssi > CC2500_DetectionThreshold){ //second round of detection if spike is detected
             	sprintf(chst,"ch:%d",ch);
@@ -173,8 +176,7 @@ void CC2500_SweepAndDetect(void) {
             	CharLCD_Write_String(chst);
             	CharLCD_Set_Cursor(1,7); // Set cursor to row 1, column 0
             	CharLCD_Write_String("DT2!");
-            	//TODO ADD Trigger alarm
-            	HAL_Delay(100);
+            	HAL_Delay(200);
         	}
 
 
@@ -186,7 +188,8 @@ void CC2500_SweepAndDetect(void) {
         	sprintf(rssiString, "FLR:%d", rssi);
         	CharLCD_Write_String(rssiString);
 
-        	//TODO ADD turn off alarm
+        	//turn off alarm
+        	Buzzer_Off();
         }
     }
 }
