@@ -142,7 +142,7 @@ int main(void)
 
 	  // Check against calibrated threshold
 	  if (voltage >= LogDetector_DetectionThreshold) {
-	      sprintf(logMessage, "SPK:%.1f", voltage);
+	      sprintf(logMessage, "DT!:%.1f", voltage);
 	      CharLCD_Set_Cursor(1, 0);
 	      CharLCD_Write_String(logMessage);
 

@@ -161,7 +161,7 @@ void CC2500_SweepAndDetect(void) {
         	CharLCD_Set_Cursor(0,7);
         	CharLCD_Write_String(chst);
         	CharLCD_Set_Cursor(1,7); // Set cursor to row 1, column 0
-        	CharLCD_Write_String("DETECTED");
+        	CharLCD_Write_String("DT!");
         	HAL_Delay(3);
         	//TODO ADD Trigger alarm
         	CC2500_SetChannel(ch);
@@ -172,7 +172,7 @@ void CC2500_SweepAndDetect(void) {
             	CharLCD_Set_Cursor(0,7);
             	CharLCD_Write_String(chst);
             	CharLCD_Set_Cursor(1,7); // Set cursor to row 1, column 0
-            	CharLCD_Write_String("DETECT_2");
+            	CharLCD_Write_String("DT2!");
             	//TODO ADD Trigger alarm
             	HAL_Delay(100);
         	}
