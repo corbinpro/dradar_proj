@@ -8,7 +8,7 @@
 int8_t CC2500_NoiseFloor = -100;
 int8_t CC2500_DetectionThreshold = -80;
 char rssiString[16];
-
+char chst[16];
 
 extern SPI_HandleTypeDef hspi1;
 
@@ -38,13 +38,13 @@ void CC2500_Strobe(uint8_t cmd) {
     CC2500_CS_HIGH();
 }
 
-//set channel ?? TODO
+//set channel
 void CC2500_SetChannel(uint8_t channel) {
     CC2500_WriteRegister(0x0A, channel);
     CC2500_Strobe(CC2500_SRX);
 }
 
-//Chech if packets are being recieved ?? TODO
+//Check signal strength through rssi
 uint8_t CC2500_ReadRSSI(void) {
     uint8_t raw = CC2500_ReadRegister(0x34);
     uint8_t calcValue = (raw >= 128) ? ((int8_t)(raw - 256) / 2 - 74) : (raw / 2 - 74);
@@ -142,7 +142,7 @@ void CC2500_RecalibrateNoiseFloor(void) {
     }
 
     CC2500_NoiseFloor = sum / sweep_count;
-    //starting threshold value:10 increase or deacrease to desired sensitivity. TODO Possibly itegrate button to change this value.
+    //starting threshold value:10 increase or deacrease to desired sensitivity. TODO Possibly integrate button to change this value.
     CC2500_DetectionThreshold = CC2500_NoiseFloor + 10;
 
 }
@@ -154,16 +154,36 @@ void CC2500_SweepAndDetect(void) {
         HAL_Delay(3);
         int8_t rssi = CC2500_ReadRSSI();
 
+
         //OUTPUT ON DETECTION
-        if (rssi > CC2500_DetectionThreshold) {
+        if (rssi > CC2500_DetectionThreshold) { //only get here when spike is detected
+        	sprintf(chst,"ch:%d",ch);
+        	CharLCD_Set_Cursor(0,7);
+        	CharLCD_Write_String(chst);
         	CharLCD_Set_Cursor(1,7); // Set cursor to row 1, column 0
         	CharLCD_Write_String("DETECTED");
-
+        	HAL_Delay(3);
         	//TODO ADD Trigger alarm
+        	CC2500_SetChannel(ch);
+        	HAL_Delay(3);
+        	rssi = CC2500_ReadRSSI();
+        	if (rssi > CC2500_DetectionThreshold){ //second round of detection if spike is detected
+            	sprintf(chst,"ch:%d",ch);
+            	CharLCD_Set_Cursor(0,7);
+            	CharLCD_Write_String(chst);
+            	CharLCD_Set_Cursor(1,7); // Set cursor to row 1, column 0
+            	CharLCD_Write_String("DETECT_2");
+            	//TODO ADD Trigger alarm
+            	HAL_Delay(100);
+        	}
+
+
         }
         else {
-        	sprintf(rssiString, "RSSI:%d", rssi);
+        	CharLCD_Set_Cursor(0,7); // Set cursor to row 0, column 0
+        	CharLCD_Write_String("2.4GHZ: ");
         	CharLCD_Set_Cursor(1,7); // Set cursor to row 1, column 0
+        	sprintf(rssiString, "FLR:%d", rssi);
         	CharLCD_Write_String(rssiString);
 
         	//TODO ADD turn off alarm

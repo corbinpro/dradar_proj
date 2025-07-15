@@ -6,4 +6,4 @@
 ../Core/Src/cc2500.c:82:6:CC2500_ApplyConfig	1
 ../Core/Src/cc2500.c:111:6:CC2500_Init	1
 ../Core/Src/cc2500.c:128:6:CC2500_RecalibrateNoiseFloor	2
-../Core/Src/cc2500.c:151:6:CC2500_SweepAndDetect	3
+../Core/Src/cc2500.c:151:6:CC2500_SweepAndDetect	4

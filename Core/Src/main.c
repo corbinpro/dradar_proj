@@ -50,6 +50,9 @@ SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN PV */
 char logMessage[100];
+float LogDetector_NoiseFloor = 0.0f;
+float LogDetector_DetectionThreshold = 0.0f;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,7 +62,7 @@ static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
-
+static void LogDetector_RecalibrateNoiseFloor(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -110,13 +113,16 @@ int main(void)
 
   //initialize the cc2500 chip
   CharLCD_Clear();
-  CC2500_Init();
+  CC2500_Init(); //includes initial calibration
+
+  //calibrate log noise floor
+  LogDetector_RecalibrateNoiseFloor();
 
   CharLCD_Clear();
   CharLCD_Set_Cursor(0,0); // Set cursor to row 0, column 0
   CharLCD_Write_String("5.8GHZ:  2.4GHZ: ");
   CharLCD_Set_Cursor(1,0); // Set cursor to row 1, column 0
-  CharLCD_Write_String("0.0V    ________");
+  CharLCD_Write_String("0.0V");
 
   /* USER CODE END 2 */
 
@@ -124,29 +130,37 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  //TODO make timer to re calibrate noise floors.
 	  //Detect with log detector
 	  // Start the ADC
 	  HAL_ADC_Start(&hadc1);
-	  // Wait for the analog-to-digital conversion to complete
 	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 
-	  // Read ADC value
+	  // Read ADC value and convert to voltage
 	  uint16_t logInputValue = HAL_ADC_GetValue(&hadc1);
-	  float voltage = (logInputValue / 4095.0) * 3.3f;  // convert to volts
-	  //checl input val
-	  // TODO change to use noise floor. take code from cc2500 driver
-	  if (logInputValue >= 0.3){
-		  //create display message
-		  sprintf(logMessage, "V%.2f", voltage);
-		  CharLCD_Set_Cursor(1,0); // Set cursor to row 1, column 0
-		  CharLCD_Write_String(logMessage);
+	  float voltage = (logInputValue / 4095.0f) * 3.3f;
 
-		  //ADD trigger alarm
+	  // Check against calibrated threshold
+	  if (voltage >= LogDetector_DetectionThreshold) {
+	      sprintf(logMessage, "SPK:%.1f", voltage);
+	      CharLCD_Set_Cursor(1, 0);
+	      CharLCD_Write_String(logMessage);
+
+	      // TODO: trigger alarm
+	  }
+	  else{
+	      sprintf(logMessage, "FLR:%.2f", voltage);
+	      CharLCD_Set_Cursor(1, 0);
+	      CharLCD_Write_String(logMessage);
+	      //TODO turn off alarm
 	  }
 
 	  //Sweep and detect with cc2500 chip
 	  CC2500_SweepAndDetect();
-	  HAL_Delay(100); //TODO rough estimate for sweeping both in about 1 second
+
+	  //TODO add 915 sweep
+
+	  //TODO add 433 sweep
 
     /* USER CODE END WHILE */
 
@@ -393,6 +407,27 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void LogDetector_RecalibrateNoiseFloor(void) {
+    const int sample_count = 100;
+    uint32_t sum = 0;
+
+    CharLCD_Set_Cursor(1, 0);
+    CharLCD_Write_String("LOG CAL");
+
+    for (int i = 0; i < sample_count; i++) {
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+        sum += HAL_ADC_GetValue(&hadc1);
+        HAL_Delay(5); // Small delay between samples
+    }
+
+    float avg_adc = sum / (float)sample_count;
+    LogDetector_NoiseFloor = (avg_adc / 4095.0f) * 3.3f;
+
+    // Set threshold (e.g., 0.15V above floor, tune as needed)
+    LogDetector_DetectionThreshold = LogDetector_NoiseFloor + 0.15f;
+}
+
 /* USER CODE END 4 */
 
 /**
