@@ -1,0 +1,188 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\title{Drone RF Signal Detector}
+\author{Your Name Here}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This project implements a multi-band drone signal detector capable of identifying activity in the 2.4 GHz and 5.8 GHz bands. Using an STM32 microcontroller, an RF frontend including a CC2500 SPI transceiver and an AD8317 analog power detector, the system provides real-time alerts via LCD display and buzzer output. This report outlines the design, implementation, testing, and career-relevant learning outcomes of the project.
+\end{abstract}
+
+\section{Introduction}
+The ongoing conflict in Ukraine, particularly the widespread use of drones in modern warfare, has underscored the urgent need for early detection systems. Viral footage on social media—especially of FPV (first-person view) drones targeting soldiers and armored vehicles—highlighted the devastating effectiveness of these technologies. In one video, I observed a soldier taking cover as a drone flew overhead. In his hand was a small device with a single antenna, emitting multiple alarms. This moment inspired the idea for a compact drone detection system that could provide early warning to soldiers or civilians. Even a few extra seconds of notice could mean the difference between life and death.
+
+This project focuses on detecting common drone control and telemetry frequencies, including 2.4 GHz, 5.8 GHz, 915 MHz, and 433 MHz bands. The aim is to build a low-cost, portable, and passive device capable of alerting users to nearby drone activity without emitting signals or interfering with surrounding systems. While commercial drone detection systems exist, they are typically expensive and inaccessible for individual or small-scale use. My goal was to keep the total component cost under \$100 USD.
+
+To ensure durability, I selected a compact waterproof Pelican case for the enclosure, making the system suitable for field conditions. The user interface was designed with simplicity and discretion in mind; visual and audible alerts can be disabled to prevent revealing the user’s location.
+
+This project also served as an opportunity to deepen my understanding of RF signal behavior and detection techniques. The experience gained will serve as a foundation for developing more advanced and effective versions of the system in future iterations.
+
+\begin{itemize}
+    \item \textbf{Motivation:} \textit{(e.g., privacy/security awareness, RF experimentation)}
+    \item \textbf{Application:} Drone presence detection using passive RF methods, civilian and military use
+    \item \textbf{Features:} LCD display, audible buzzer, real-time RSSI monitoring, self-calibration
+\end{itemize}
+
+\section{System Overview}
+
+\subsection{Block Diagram}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{photos/v2.png}
+    \caption{System Block Diagram of RF Detector}
+\end{figure}
+
+
+\subsection{Frequency Bands Covered}
+\begin{itemize}
+    \item \textbf{433 MHz:} Detected using an AD8317 analog RF power detector with tuned antenna
+    \item \textbf{915 MHz:} Detected using an AD8317 analog RF power detector with tuned antenna
+    \item \textbf{2.4 GHz:} Detected using the CC2500 SPI transceiver (replaced with AD8317 in final build)
+    \item \textbf{5.8 GHz:} Detected using the AD8317 logarithmic analog power detector
+\end{itemize}
+
+\section{Hardware Design}
+
+\subsection{Microcontroller and Peripherals}
+\begin{itemize}
+    \item STM32L4 Nucleo development board
+    \item Passive buzzer (TMB12A05) for tone generation
+    \item QAPASS I2C LCD screen for real-time output
+\end{itemize}
+
+\subsection{RF Components}
+\begin{itemize}
+    \item \textbf{433 MHz AD8317}: Analog RF detector with band-specific antenna (SMA)
+    \item \textbf{915 MHz AD8317}: Analog RF detector with tuned antenna and SMA to U.FL connector
+    \item \textbf{2.4 GHz}: Initially used CC2500 SPI transceiver; later replaced with AD8317 due to reliability
+    \item \textbf{5.8 GHz AD8317}: Used for detecting FPV and drone downlink signals in the upper band
+\end{itemize}
+
+\subsection{Shielding and Enclosure}
+\begin{itemize}
+    \item Internally copper-taped Pelican case
+    \item 3D-printed shield box wrapped in copper tape for each AD8317 detector
+    \item All shields grounded to battery negative to ensure effective EMI suppression
+\end{itemize}
+
+\section{Software Implementation}
+
+\subsection{Firmware Overview}
+\begin{itemize}
+    \item C code developed in STM32CubeIDE
+    \item Peripheral drivers for SPI, ADC, I2C, and GPIO
+    \item Modularized: \texttt{cc2500.c}, \texttt{char\_lcd.c}, \texttt{buzzer.c}
+    \item LCD messages for calibration, signal detection, and debug output
+\end{itemize}
+
+\subsection{Key Functional Elements}
+\begin{itemize}
+    \item \texttt{CC2500\_SweepAndDetect()} — 2.4 GHz scanning logic
+    \item \texttt{LogDetector\_RecalibrateNoiseFloor()} — ADC averaging for noise baseline
+    \item Button-triggered test via PC13 interrupt (calls \texttt{CC2500\_RunSignalTest()}) -debugging
+\end{itemize}
+
+\subsection{RSSI-Based Detection}
+\begin{itemize}
+    \item CC2500 RSSI readback from `0x34` register
+    \item AD8317 voltage sampled via ADC1
+    \item Threshold set as average noise + margin (can be adjusted for accuracy)
+    \item Buzzer and LCD triggered if RSSI or ADC voltage crosses threshold
+\end{itemize}
+
+\section{Testing and Results}
+\subsection{Test Methodology}
+% TODO: Insert test setup details
+\text I began testing by detecting the noise floor, mainly coming from WiFi routers in different buildings on the school campus and town. Upon finding that I consistently measured different but reasonable signal strengths throughout the city, I began the second phase of testing.
+
+In phase 2 of the testing, I will start with a control test. For my purposes, the closest thing to a place with no interference was some caves near St Anthony Idaho. I will verify that the signals i am detecting are coming from outside my Faraday cage casing. 
+
+In phase 3 of the testing, i will introduce phones, hotspots, and laptops into the cave. I will check for spikes in the readings and note the strengths of each device. I will introduce a DJI mavic 2 and note the difference in signal strength. Using this information, I will tune the detection thresholds in software and begin phase 4.
+
+In phase 4 I will test the accuracy of detection in the mountains and then the city, using DJI drones for test subject. I will collaborate with the drone society at my local university to test it on a variety of drones. 
+
+\subsection{Results Summary}
+% TODO: Summarize findings or failures
+\textit{Include screenshots, voltages, or response times. Highlight which bands worked better.}
+\begin{itemize}
+    \item Phase 1: Phase 1 was successful for the 5.8 GHz and 2.4 GHz frequency range. I used wifi routers to generate the requisite frequencies. The cable i had made for my LCD screen was scrambling the I2C serial data due to interference so i used copper tape to shield the outside of the cable, and grounded the shield to my faraday cage (copper lined casing). I had no reliable way of generating 915MHz and 433MHz for testing And my RF modules (similar to cc2500) were not set up yet. I decided then to replace those obscure RF modules with the now proven AD8317. My cc2500 chip began to malfunction due to poor build quality. It established a noise floor, communicated with my STM board and detected spikes 3 times. It then stopped working due to an unknown failure. For the rest of my testing i will substitute the cc2500 for another AD8317 Analog power detector. 
+    \href{https://github.com/corbinpro/dradar_proj}{Link to video}
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{photos/lowqIMG_0910.jpeg}
+    \caption{Phase 1 testing}
+    \end{figure}
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{photos/lowqIMG_0911.jpeg}
+    \caption{Phase 2 testing}
+    \end{figure}
+    
+    \item Phase 2: To be continued...
+    \item Phase 3: To be continued...
+    \item Phase 4: To be continued...
+\end{itemize}
+
+\subsection{Challenges}
+\begin{itemize}
+    \item Ensuring clean ADC signals (AD8317 sensitivity to voltage noise)
+    \item Proper SPI initialization and config for CC2500
+    \item Finding datasheets for cheap chinese clones of reputable RF chips
+    \item Ground loops and shielding effectiveness
+    \item Creating drivers for each I/O device
+\end{itemize}
+
+\section{Future Work}
+\begin{itemize}
+    \item AD8317 for 2.4 GHz frequency
+    \item Code restructuring for updated hardware
+    \item Input buttons for "Dark mode" and "Silent mode"
+    \item Battery power supply
+    \item Phase 2, 3, and 4 testing
+\end{itemize}
+
+\section{Career Reflection}
+% TODO: Write about your personal technical growth:
+% - Learning STM32 hardware
+% - Writing modular C drivers
+% - SPI, ADC, interrupt handling
+% - Dealing with EMI and shielding challenges
+% - Embedded real-time diagnostics
+\text I started this project knowing I would be pushing the limits of my knowledge and experience. For weeks I researched and acquired the necessary hardware. For 1.5 months I assembled and tested my system. During that time I changed course twice. In addition to substituting RF modules with logarithmic detectors, I decided that in future versions I would need more processing power and Software Defined Radio to achieve the accuracy I found necessary to reliably isolate drone signals from noise. At the end of this project I have a crude, but functional prototype. I vastly increased my knowledge of: 
+\begin{itemize}
+    \item Drivers 
+    \item I/O
+    \item Serial communication protocols(I2C, SPI) 
+    \item ADC(Analog to digital conversion)
+    \item PWM (pulse width modulation)
+    \item Debugging techniques
+    \item RF communication
+    \item Drone technology
+\end{itemize}
+\section{Appendix}
+\begin{itemize}
+    \item CC2500 register configuration table
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{photos/Screenshot 2025-07-16 at 4.12.56 PM.png}
+    \caption{Config table}
+    \end{figure}
+    \item \href{https://github.com/corbinpro/dradar_proj}{Link to GitHub Code}
+
+    
+\end{itemize}
+
+\end{document}
+
+
