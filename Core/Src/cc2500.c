@@ -4,12 +4,16 @@
 #include "stm32l4xx_hal_conf.h"
 #include "char_lcd.h"
 #include "buzzer.h"
+#include <stdbool.h>
 
 // Exposed values
 int8_t CC2500_NoiseFloor = -100;
 int8_t CC2500_DetectionThreshold = -80;
 char rssiString[16];
 char chst[16];
+bool detected;
+#define CC2500_SWEEP_MIN 0
+#define CC2500_SWEEP_MAX 43  // Stops sweep at ~2483.5 MHz with 200 kHz spacing
 
 extern SPI_HandleTypeDef hspi1;
 
@@ -144,13 +148,13 @@ void CC2500_RecalibrateNoiseFloor(void) {
 
     CC2500_NoiseFloor = sum / sweep_count;
     //starting threshold value:10 increase or deacrease to desired sensitivity. TODO Possibly integrate button to change this value.
-    CC2500_DetectionThreshold = CC2500_NoiseFloor + 10;
+    CC2500_DetectionThreshold = CC2500_NoiseFloor + 3;
 
 }
 
 // Use sweep mode and read rssi to see if packets are being recieved on any channels, read strength, alert on noise floor threshold
 void CC2500_SweepAndDetect(void) {
-    for (uint8_t ch = 0; ch <= 100; ch++) {
+	for (uint8_t ch = CC2500_SWEEP_MIN; ch <= CC2500_SWEEP_MAX; ch++) {
         CC2500_SetChannel(ch); //set channel
         HAL_Delay(3);
         int8_t rssi = CC2500_ReadRSSI(); //read signal strength on channel
@@ -158,6 +162,7 @@ void CC2500_SweepAndDetect(void) {
 
         //OUTPUT ON DETECTION
         if (rssi > CC2500_DetectionThreshold) { //only get here when spike is detected
+        	CharLCD_Clear();
         	sprintf(chst,"ch:%d",ch);
         	CharLCD_Set_Cursor(0,7);
         	CharLCD_Write_String(chst);
@@ -171,10 +176,11 @@ void CC2500_SweepAndDetect(void) {
         	HAL_Delay(200);
         	rssi = CC2500_ReadRSSI();
         	if (rssi > CC2500_DetectionThreshold){ //second round of detection if spike is detected
-            	sprintf(chst,"ch:%d",ch);
-            	CharLCD_Set_Cursor(0,7);
+        		CharLCD_Clear();
+        		sprintf(chst,"ch:%d",ch);
+            	CharLCD_Set_Cursor(0,8);
             	CharLCD_Write_String(chst);
-            	CharLCD_Set_Cursor(1,7); // Set cursor to row 1, column 0
+            	CharLCD_Set_Cursor(1,8); // Set cursor to row 1, column 0
             	CharLCD_Write_String("DT2!");
             	HAL_Delay(200);
         	}
@@ -182,14 +188,44 @@ void CC2500_SweepAndDetect(void) {
 
         }
         else {
-        	CharLCD_Set_Cursor(0,7); // Set cursor to row 0, column 0
+        	CharLCD_Set_Cursor(0,8); // Set cursor to row 0, column 0
         	CharLCD_Write_String("2.4GHZ: ");
-        	CharLCD_Set_Cursor(1,7); // Set cursor to row 1, column 0
-        	sprintf(rssiString, "FLR:%d", rssi);
+        	CharLCD_Set_Cursor(1,8); // Set cursor to row 1, column 0
+        	sprintf(rssiString, "FL:%d", rssi);
         	CharLCD_Write_String(rssiString);
 
         	//turn off alarm
         	Buzzer_Off();
         }
     }
+}
+
+void CC2500_RunSignalTest(void) {
+//    CharLCD_Clear();
+//    CharLCD_Set_Cursor(0, 0);
+//    CharLCD_Write_String("Testing...");
+
+    const uint8_t test_min = CC2500_SWEEP_MIN;
+    const uint8_t test_max = CC2500_SWEEP_MAX;
+    const uint8_t margin = 6;
+    const int threshold = CC2500_NoiseFloor + margin;
+    detected = false;
+
+    for (uint8_t ch = test_min; ch <= test_max; ch++) {
+        CC2500_SetChannel(ch);
+//        for (volatile int i = 0; i < 100000; i++);
+        int8_t rssi = CC2500_ReadRSSI();
+        if (rssi > threshold) {
+            detected = true;
+            break;
+        }
+    }
+
+//    CharLCD_Clear();
+//    CharLCD_Set_Cursor(0, 0);
+//    if (detected) {
+//        CharLCD_Write_String("TEST PASS");
+//    } else {
+//        CharLCD_Write_String("FAIL: NO SIG");
+//    }
 }

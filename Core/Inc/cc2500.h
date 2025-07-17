@@ -3,6 +3,8 @@
 
 #include "stm32l4xx_hal.h"
 #include "stm32l4xx_hal_conf.h"
+#include <stdbool.h>
+
 
 // SPI & GPIO control
 #define CC2500_CS_PORT GPIOA
@@ -23,6 +25,7 @@ void CC2500_Strobe(uint8_t cmd);
 void CC2500_SweepAndDetect(void);
 void CC2500_ApplyConfig(void);
 void CC2500_RecalibrateNoiseFloor(void);
+void CC2500_RunSignalTest(void);
 
 // Shared values
 extern int8_t CC2500_NoiseFloor;

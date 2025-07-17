@@ -143,7 +143,7 @@ int main(void)
 
   CharLCD_Clear();
   CharLCD_Set_Cursor(0,0); // Set cursor to row 0, column 0
-  CharLCD_Write_String("5.8GHZ:  2.4GHZ: ");
+  CharLCD_Write_String("5.8GHZ:  2.4GHZ:");
   CharLCD_Set_Cursor(1,0); // Set cursor to row 1, column 0
   CharLCD_Write_String("0.0V");
 
@@ -170,9 +170,10 @@ int main(void)
 	      CharLCD_Write_String(logMessage);
 	      //BUZZER ON TILL NEXT CYCLE
 	      Buzzer_On(440); // Tone 1: A4
+	      HAL_Delay(300);
 	  }
 	  else{
-	      sprintf(logMessage, "FLR:%.2f", voltage);
+	      sprintf(logMessage, "FL:%.2f ", voltage);
 	      CharLCD_Set_Cursor(1, 0);
 	      CharLCD_Write_String(logMessage);
 	      //BUZZER OFF TILL NEXT DETECT
@@ -488,12 +489,22 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
   /*Configure GPIO pin : PA4 */
   GPIO_InitStruct.Pin = GPIO_PIN_4;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -518,8 +529,8 @@ void LogDetector_RecalibrateNoiseFloor(void) {
     float avg_adc = sum / (float)sample_count;
     LogDetector_NoiseFloor = (avg_adc / 4095.0f) * 3.3f;
 
-    // Set threshold (e.g., 0.15V above floor, tune as needed)
-    LogDetector_DetectionThreshold = LogDetector_NoiseFloor + 0.15f;
+    // TODO Set threshold (e.g., 0.15V above floor, tune as needed)
+    LogDetector_DetectionThreshold = LogDetector_NoiseFloor + 0.07f;
 }
 
 /* USER CODE END 4 */
